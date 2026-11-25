@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: l10
+      POSTGRES_PASSWORD: l10
+      POSTGRES_DB: l10
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U l10 -d l10"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: ./backend
+    environment:
+      ENVIRONMENT: local
+      DATABASE_URL: postgresql+asyncpg://l10:l10@db:5432/l10
+      APP_NOW: ${APP_NOW:-2026-11-11T15:00:00Z}
+      APP_CLOCK_MODE: ${APP_CLOCK_MODE:-running}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-insecure-change-me}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  db-data:
