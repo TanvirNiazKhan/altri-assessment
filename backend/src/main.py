@@ -9,11 +9,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.middlewares.error_handler import register_exception_handlers
 from src.api.middlewares.request_id import RequestIdMiddleware
 from src.api.path import api_router
+from src.api.realtime.dispatcher import TeamEventDispatcher
 from src.config.database import build_engine, build_sessionmaker
 from src.config.logging import configure_logging
 from src.config.settings import Settings, get_settings
 from src.domain.shared.clock import Clock
 from src.infra.adapters.session_signer import SessionSigner
+from src.infra.realtime.hub import ConnectionHub
+from src.infra.realtime.listener import PgListener, asyncpg_dsn
 from src.infra.services.clock import build_clock
 
 
@@ -26,9 +29,22 @@ def create_app(settings: Settings | None = None, clock: Clock | None = None) -> 
         engine = build_engine(settings)
         app.state.engine = engine
         app.state.sessionmaker = build_sessionmaker(engine)
+        app.state.hub = ConnectionHub()
+        app.state.dispatcher = TeamEventDispatcher(
+            app.state.hub, app.state.sessionmaker, app.state.clock
+        )
+        listener = PgListener(
+            asyncpg_dsn(settings.database_url),
+            on_event=app.state.dispatcher.handle,
+            on_reconnect=app.state.dispatcher.resync_all,
+        )
+        if settings.realtime_enabled:
+            await listener.start()
+        app.state.listener = listener
         try:
             yield
         finally:
+            await listener.stop()
             await engine.dispose()
 
     app = FastAPI(

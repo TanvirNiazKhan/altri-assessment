@@ -14,6 +14,10 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.domain.modules.company.entity import Company
+from src.domain.modules.issue.entity import IssueSourceType
+from src.domain.modules.meeting.entity import MeetingSection
+from src.domain.modules.meeting.service import MeetingService
 from src.infra.database.models import (
     ID_SEQUENCES,
     Base,
@@ -147,7 +151,7 @@ async def load_seed(session: AsyncSession, seed: Seed) -> bool:
             team_id=mt["team_id"],
             facilitator_id=mt["facilitator_id"],
             started_at=started,
-            current_section="conclude",
+            current_section=MeetingSection.CONCLUDE,
             section_started_at=started,
         )
         session.add(meeting)
@@ -180,7 +184,7 @@ async def load_seed(session: AsyncSession, seed: Seed) -> bool:
                 created_at=_req_dt(i["created_at"]),
                 solved_at=_dt(i["solved_at"]),
                 resolution_note=i["resolution_note"],
-                source_type="measurable" if src else None,
+                source_type=IssueSourceType.MEASURABLE if src else None,
                 source_measurable_id=src["measurable_id"] if src else None,
                 source_week_start=_d(src["week_start"]) if src else None,
                 solved_in_meeting_id=_meeting_for(i["team_id"], _dt(i["solved_at"]), windows),
@@ -203,6 +207,7 @@ async def load_seed(session: AsyncSession, seed: Seed) -> bool:
         for t in seed["todos"]
     )
     await session.flush()
+    await _snapshot_meeting_summaries(session, seed)
     log.info("seed loaded: %d issues, %d todos", len(seed["issues"]), len(seed["todos"]))
     return True
 
@@ -212,3 +217,34 @@ async def truncate_all(session: AsyncSession) -> None:
     await session.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
     for seq in ID_SEQUENCES:
         await session.execute(text(f"ALTER SEQUENCE {seq.name} RESTART WITH {seq.start}"))
+
+
+async def _snapshot_meeting_summaries(session: AsyncSession, seed: Seed) -> None:
+    """Freeze the seeded meetings' summaries with the same code that ends a live meeting."""
+    # Local imports: repositories import the models this module also uses.
+    from src.infra.database.repositories import (
+        SqlIssueRepository,
+        SqlMeetingRepository,
+        SqlScorecardRepository,
+        SqlTodoRepository,
+        SqlUserRepository,
+    )
+    from src.infra.database.unit_of_work import SqlUnitOfWork
+    from src.infra.realtime.publisher import NullEventPublisher
+
+    company = Company(**seed["company"])
+    meetings_repo = SqlMeetingRepository(session)
+    service = MeetingService(
+        meetings_repo,
+        SqlScorecardRepository(session),
+        SqlIssueRepository(session),
+        SqlTodoRepository(session),
+        SqlUserRepository(session),
+        SqlUnitOfWork(session),
+        NullEventPublisher(),
+    )
+    for mt in seed["meetings"]:
+        meeting = await meetings_repo.get(mt["team_id"], mt["id"])
+        assert meeting is not None and meeting.ended_at is not None
+        summary = await service.build_summary(meeting, company.zone)
+        await meetings_repo.save_summary(summary, computed_at=meeting.ended_at)
