@@ -1,2 +1,7 @@
 /assessment-details/
 .DS_Store
+
+# Agent skills (local tooling, not project code)
+.claude/
+.agents/
+skills-lock.json

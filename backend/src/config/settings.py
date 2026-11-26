@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     session_max_age_s: int = 60 * 60 * 12
     cookie_secure: bool = False
 
+    # LISTEN for team events and push them to WebSocket clients.
+    realtime_enabled: bool = True
+
     cors_origins: list[str] = Field(default_factory=list)
     seed_path: Path = _BACKEND_ROOT / "seed" / "seed.json"
 

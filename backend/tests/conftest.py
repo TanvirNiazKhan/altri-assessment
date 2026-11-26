@@ -76,6 +76,7 @@ def settings(database_url: str) -> Settings:
         database_url=database_url,
         app_clock_mode="frozen",
         session_secret="test-secret",
+        realtime_enabled=database_url != UNUSED_URL,
         log_level="WARNING",
     )
 
