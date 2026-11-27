@@ -1,0 +1,202 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens — "Lake & signal"
+ *
+ * Type:   Big Shoulders (Chicago's civic signage face) for display and the meeting
+ *         clock; Atkinson Hyperlegible Next for everything read at speed.
+ * Color:  cool paper, blue-black ink, lake blue for action, sky for "now",
+ *         and two signal colors that mean exactly one thing each:
+ *         green = on track, red = off track. Pending is a grey hatch.
+ * Shape:  4px controls, square scorecard cells, no card chrome around sections.
+ */
+
+@theme inline {
+  --font-sans: var(--font-body);
+  /* shadcn titles (dialogs, empty states) stay in the body face; display is opt-in via .type-display */
+  --font-heading: var(--font-body);
+  --font-display: var(--font-display);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Domain signals */
+  --color-on-track: var(--on-track);
+  --color-on-track-soft: var(--on-track-soft);
+  --color-on-track-ink: var(--on-track-ink);
+  --color-off-track: var(--off-track);
+  --color-off-track-soft: var(--off-track-soft);
+  --color-off-track-ink: var(--off-track-ink);
+  --color-pending: var(--pending);
+  --color-pending-soft: var(--pending-soft);
+  --color-now: var(--now);
+  --color-now-ink: var(--now-ink);
+  --color-paper: var(--paper);
+
+  --color-chart-1: var(--primary);
+  --color-chart-2: var(--on-track);
+  --color-chart-3: var(--off-track);
+  --color-chart-4: var(--pending);
+  --color-chart-5: var(--now);
+
+  --color-sidebar: var(--card);
+  --color-sidebar-foreground: var(--foreground);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-primary-foreground: var(--primary-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--accent-foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--ring);
+
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
+  --radius-4xl: 999px;
+
+  --tracking-display: -0.01em;
+}
+
+:root {
+  --radius: 6px;
+
+  --paper: #f3f5f6;
+  --background: #f3f5f6;
+  --foreground: #121c26;
+  --card: #ffffff;
+  --card-foreground: #121c26;
+  --popover: #ffffff;
+  --popover-foreground: #121c26;
+
+  --primary: #0b5c80;
+  --primary-foreground: #ffffff;
+  --secondary: #dcedf6;
+  --secondary-foreground: #0b3f59;
+  --muted: #e5eaed;
+  --muted-foreground: #4f5c68;
+  --accent: #e2edf3;
+  --accent-foreground: #121c26;
+  --destructive: #b8231a;
+
+  --border: #d0d9df;
+  --input: #b9c5cd;
+  --ring: #2c8ebb;
+
+  --on-track: #1f7a4d;
+  --on-track-soft: #dcefe4;
+  --on-track-ink: #12492e;
+  --off-track: #c8281e;
+  --off-track-soft: #f9dcd8;
+  --off-track-ink: #861810;
+  --pending: #7f8b96;
+  --pending-soft: #e8ecef;
+  --now: #a9d8ee;
+  --now-ink: #0b3f59;
+}
+
+.dark {
+  --paper: #0e161e;
+  --background: #0e161e;
+  --foreground: #e6ecf0;
+  --card: #15202a;
+  --card-foreground: #e6ecf0;
+  --popover: #17232e;
+  --popover-foreground: #e6ecf0;
+
+  --primary: #5fbbe2;
+  --primary-foreground: #08161f;
+  --secondary: #173244;
+  --secondary-foreground: #cfe8f5;
+  --muted: #1c2834;
+  --muted-foreground: #9aa8b4;
+  --accent: #1d2c39;
+  --accent-foreground: #e6ecf0;
+  --destructive: #f0675d;
+
+  --border: #26343f;
+  --input: #364653;
+  --ring: #5fbbe2;
+
+  --on-track: #4cc38a;
+  --on-track-soft: #123323;
+  --on-track-ink: #93e2bb;
+  --off-track: #f0675d;
+  --off-track-soft: #3b1815;
+  --off-track-ink: #ffb8b1;
+  --pending: #7d8995;
+  --pending-soft: #1b2530;
+  --now: #1a4a63;
+  --now-ink: #cfe8f5;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "kern";
+  }
+  ::selection {
+    background: var(--now);
+    color: var(--now-ink);
+  }
+}
+
+@layer utilities {
+  /* Big Shoulders, set tight and heavy: section titles, team name, the meeting clock. */
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: var(--tracking-display);
+  }
+  .type-numeric {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  /* Pending cells: a hatch, so "no score yet" never reads as a colour. */
+  .hatch-pending {
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0 5px,
+      color-mix(in oklab, var(--pending) 28%, transparent) 5px 6px
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
