@@ -7,4 +7,5 @@
 skills-lock.json
 
 # Local planning docs
-docs/
+docs/*
+!docs/DECISIONS.md
