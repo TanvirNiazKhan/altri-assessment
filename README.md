@@ -7,7 +7,7 @@ A team operating system in the EOS style. Teams track weekly **Measurables** (Sc
 | `backend/` | FastAPI, SQLAlchemy 2 (async), Alembic, PostgreSQL 16 | Complete for the spec: every 2.5 action, 2.6 rule, real-time meetings and the rules report |
 | `frontend/` | Next.js 16 (App Router), TypeScript, Tailwind 4, shadcn/ui, TanStack Query | Team page, live meeting page, summaries; [design and structure](frontend/README.md) |
 
-API docs: OpenAPI at `/api/docs`
+Docs: [decision record](docs/DECISIONS.md) · OpenAPI at `/api/docs`
 
 ## Setup
 
